@@ -146,120 +146,104 @@ function Tricycle({ x=0, z=0, rot=0, color='#EE8800' }:
   )
 }
 
-// ── Isometric camera with drag-to-pan (no rotation, no scroll zoom) ───────────
-const ISO_POS  = new THREE.Vector3(20, 20, 20)
-const ISO_LOOK = new THREE.Vector3(0, 0, 0)
-const ISO_ZOOM = 58
+// ── Isometric camera constants ────────────────────────────────────────────────
+// Camera at [20,20,20] → local -Z = [-0.577,-0.577,-0.577] → looks at origin.
+// Computed: Ry(π/4) × Rx(-atan(1/√2)) × [0,0,-1] = [-0.577,-0.577,-0.577] ✓
+const ISO_ZOOM  = 58
+const ISO_ROT_X = -Math.atan(1 / Math.sqrt(2))  // ≈ -35.26°
+const ISO_ROT_Y = Math.PI / 4                    // 45°
 
 function CameraController() {
   const { selectedDestination } = useAppStore()
   const { camera, gl } = useThree()
 
-  const cLook    = useRef(ISO_LOOK.clone())
-  const tLook    = useRef(ISO_LOOK.clone())
-  const tPos     = useRef(ISO_POS.clone())
-  const tZoom    = useRef(ISO_ZOOM)
+  // smooth camera center (world XZ)
+  const cx = useRef(0)
+  const cz = useRef(0)
+  const tx = useRef(0)
+  const tz = useRef(0)
+  const tZoom = useRef(ISO_ZOOM)
 
-  // pan state
-  const panX     = useRef(0)
-  const panZ     = useRef(0)
-  const destOX   = useRef(0)
-  const destOZ   = useRef(0)
-
-  // pointer drag tracking
-  const isDown   = useRef(false)
-  const startXY  = useRef({ x: 0, y: 0 })
-  const lastXY   = useRef({ x: 0, y: 0 })
-  const panning  = useRef(false)
-
+  // drag-to-pan state
+  const panX    = useRef(0)
+  const panZ    = useRef(0)
+  const isDown  = useRef(false)
+  const startXY = useRef({ x: 0, y: 0 })
+  const lastXY  = useRef({ x: 0, y: 0 })
+  const isPanning = useRef(false)
   const MAX_PAN = 9
 
-  // on destination select: update offset, reset pan
   useEffect(() => {
     if (selectedDestination) {
-      const dest = destinations.find(d => d.id === selectedDestination)!
-      const [dx,,dz] = dest.scene3dPos
-      destOX.current = dx * 0.42
-      destOZ.current = dz * 0.42
-      tZoom.current  = 78
+      const dest = destinations.find(d => d.id === selectedDestination)
+      if (dest) {
+        tx.current = dest.scene3dPos[0] * 0.42
+        tz.current = dest.scene3dPos[2] * 0.42
+        tZoom.current = 78
+      }
     } else {
-      destOX.current = 0
-      destOZ.current = 0
-      tZoom.current  = ISO_ZOOM
+      tx.current = 0
+      tz.current = 0
+      tZoom.current = ISO_ZOOM
     }
     panX.current = 0
     panZ.current = 0
   }, [selectedDestination])
 
-  // pointer + wheel listeners
   useEffect(() => {
     const el = gl.domElement
     el.style.cursor = 'grab'
 
     const onDown = (e: PointerEvent) => {
-      isDown.current  = true
-      panning.current = false
+      isDown.current = true
+      isPanning.current = false
       startXY.current = { x: e.clientX, y: e.clientY }
       lastXY.current  = { x: e.clientX, y: e.clientY }
       el.style.cursor = 'grabbing'
     }
-
     const onMove = (e: PointerEvent) => {
       if (!isDown.current) return
-      const dist = Math.hypot(
-        e.clientX - startXY.current.x,
-        e.clientY - startXY.current.y
-      )
+      const dist = Math.hypot(e.clientX - startXY.current.x, e.clientY - startXY.current.y)
       const dx = e.clientX - lastXY.current.x
       const dy = e.clientY - lastXY.current.y
       lastXY.current = { x: e.clientX, y: e.clientY }
-
-      if (dist > 4 || panning.current) {
-        panning.current = true
+      if (dist > 4 || isPanning.current) {
+        isPanning.current = true
         const zoom  = (camera as THREE.OrthographicCamera).zoom
         const scale = 1.2 / zoom
-        // Isometric ground-pan: camera right=(0.707,0,-0.707)
-        // content-follows-finger: lookAt moves opposite to screen drag direction
         panX.current = THREE.MathUtils.clamp(panX.current - 0.707*(dx+dy)*scale, -MAX_PAN, MAX_PAN)
         panZ.current = THREE.MathUtils.clamp(panZ.current + 0.707*(dx-dy)*scale, -MAX_PAN, MAX_PAN)
       }
     }
-
-    const onUp = () => {
-      isDown.current  = false
-      panning.current = false
-      el.style.cursor = 'grab'
-    }
-
-    // block scroll zoom entirely
+    const onUp = () => { isDown.current = false; isPanning.current = false; el.style.cursor = 'grab' }
     const onWheel = (e: WheelEvent) => e.preventDefault()
 
-    el.addEventListener('pointerdown',  onDown)
+    el.addEventListener('pointerdown', onDown)
     window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup',   onUp)
+    window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onUp)
     el.addEventListener('wheel', onWheel, { passive: false })
-
     return () => {
-      el.removeEventListener('pointerdown',  onDown)
+      el.removeEventListener('pointerdown', onDown)
       window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup',   onUp)
+      window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
       el.removeEventListener('wheel', onWheel)
     }
   }, [camera, gl])
 
   useFrame((_, dt) => {
-    const f  = 1 - Math.exp(-4 * dt)
-    const lx = destOX.current + panX.current
-    const lz = destOZ.current + panZ.current
+    const f = 1 - Math.exp(-4 * dt)
+    const lx = tx.current + panX.current
+    const lz = tz.current + panZ.current
 
-    tLook.current.set(lx, 0, lz)
-    tPos.current.set(20 + lx, 20, 20 + lz)
+    cx.current += (lx - cx.current) * f
+    cz.current += (lz - cz.current) * f
 
-    camera.position.lerp(tPos.current, f)
-    cLook.current.lerp(tLook.current, f)
-    camera.lookAt(cLook.current)
+    // Position camera on the isometric rail above the scene center
+    camera.position.set(20 + cx.current, 20, 20 + cz.current)
+    // Fixed isometric orientation — no lookAt() needed, no frame-race possible
+    camera.rotation.set(ISO_ROT_X, ISO_ROT_Y, 0)
 
     const o = camera as THREE.OrthographicCamera
     o.zoom += (tZoom.current - o.zoom) * f
