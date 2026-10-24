@@ -778,9 +778,9 @@ export function CityMap() {
       camera={{ position:[20,20,20], zoom:ISO_ZOOM, near:0.1, far:200 }}
       gl={{ alpha: false }}
       shadows dpr={[1,1.5]}
-      onCreated={({ camera }) => {
-        // Orient the camera toward origin BEFORE the first frame renders
+      onCreated={({ camera, gl }) => {
         camera.lookAt(0, 0, 0)
+        gl.setClearColor(0x1A2535, 1)
         setTimeout(() => setLoading(false), 600)
       }}
       aria-label="Isometric map of Naga City"

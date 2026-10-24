@@ -203,6 +203,10 @@ button:focus-visible {
   z-index: var(--z-scene);
 }
 
+.scene-container canvas {
+  background-color: #1A2535;
+}
+
 /* ── Header ── */
 .site-header {
   position: absolute;
