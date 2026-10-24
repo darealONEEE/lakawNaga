@@ -240,10 +240,8 @@ function CameraController() {
     cx.current += (lx - cx.current) * f
     cz.current += (lz - cz.current) * f
 
-    // Position camera on the isometric rail above the scene center
+    // Move along the isometric rail — direction stays constant, position shifts
     camera.position.set(20 + cx.current, 20, 20 + cz.current)
-    // Fixed isometric orientation — no lookAt() needed, no frame-race possible
-    camera.rotation.set(ISO_ROT_X, ISO_ROT_Y, 0)
 
     const o = camera as THREE.OrthographicCamera
     o.zoom += (tZoom.current - o.zoom) * f
@@ -776,14 +774,27 @@ export function CityMap() {
     <Canvas orthographic
       camera={{ position:[20,20,20], zoom:ISO_ZOOM, near:0.1, far:200 }}
       shadows dpr={[1,1.5]}
-      onCreated={() => setTimeout(() => setLoading(false), 600)}
+      onCreated={({ camera }) => {
+        // Orient the camera toward origin BEFORE the first frame renders
+        camera.lookAt(0, 0, 0)
+        setTimeout(() => setLoading(false), 600)
+      }}
       aria-label="Isometric map of Naga City"
     >
       <color attach="background" args={['#1A2535']} />
       <fog attach="fog" color="#1A2535" near={52} far={72} />
+
+      {/* CameraController outside Suspense — always runs */}
+      <CameraController />
+
+      {/* Diagnostic: always-visible test box — remove once scene is confirmed working */}
+      <mesh position={[0, 1, 0]}>
+        <boxGeometry args={[3, 3, 3]} />
+        <meshBasicMaterial color="#FF4444" />
+      </mesh>
+
       <Suspense fallback={null}>
         <Lighting />
-        <CameraController />
         <Ground />
         <Fence />
         <StreetTrees />
