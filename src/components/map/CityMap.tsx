@@ -1,6 +1,6 @@
 import { Suspense, useRef, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
+import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { useAppStore } from '../../store/appStore'
 import { destinations, type DestinationId } from '../../data/destinations'
@@ -650,18 +650,19 @@ function ZoneHitArea({ destId, position, name, icon, color, selected }: {
           <meshBasicMaterial color={color} transparent opacity={0.4} />
         </mesh>
       )}
-      <Html position={[0, selected ? labelY+0.5 : labelY, 0]} center distanceFactor={14} zIndexRange={[10,20]}>
-        <div style={{ pointerEvents:'none', opacity: selected ? 1 : 0.88 }}>
-          <div style={{
-            background:`${color}EE`, color:'#F5F0E5',
-            padding:'3px 9px', borderRadius:20,
-            fontSize:11, fontWeight:700, letterSpacing:'0.04em',
-            whiteSpace:'nowrap', boxShadow:'0 2px 8px rgba(0,0,0,0.45)',
-          }}>
-            {icon} {name}
-          </div>
-        </div>
-      </Html>
+      <Text
+        position={[0, selected ? labelY+0.5 : labelY, 0]}
+        fontSize={0.55}
+        color="#F5F0E5"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.06}
+        outlineColor="#000000"
+        outlineOpacity={0.6}
+        fillOpacity={selected ? 1 : 0.88}
+      >
+        {name}
+      </Text>
     </group>
   )
 }
