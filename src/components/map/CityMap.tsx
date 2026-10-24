@@ -776,6 +776,7 @@ export function CityMap() {
   return (
     <Canvas orthographic
       camera={{ position:[20,20,20], zoom:ISO_ZOOM, near:0.1, far:200 }}
+      gl={{ alpha: false }}
       shadows dpr={[1,1.5]}
       onCreated={({ camera }) => {
         // Orient the camera toward origin BEFORE the first frame renders
@@ -789,12 +790,6 @@ export function CityMap() {
 
       {/* CameraController outside Suspense — always runs */}
       <CameraController />
-
-      {/* Diagnostic: always-visible test box — remove once scene is confirmed working */}
-      <mesh position={[0, 1, 0]}>
-        <boxGeometry args={[3, 3, 3]} />
-        <meshBasicMaterial color="#FF4444" />
-      </mesh>
 
       <Suspense fallback={null}>
         <Lighting />
