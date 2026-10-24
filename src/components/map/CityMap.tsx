@@ -240,8 +240,11 @@ function CameraController() {
     cx.current += (lx - cx.current) * f
     cz.current += (lz - cz.current) * f
 
-    // Move along the isometric rail — direction stays constant, position shifts
+    // Position shifts along the isometric rail; lookAt re-applied every frame
+    // so React/R3F lifecycle can never leave the camera in the wrong orientation.
+    // Direction is always [-20,-20,-20] → constant isometric view.
     camera.position.set(20 + cx.current, 20, 20 + cz.current)
+    camera.lookAt(cx.current, 0, cz.current)
 
     const o = camera as THREE.OrthographicCamera
     o.zoom += (tZoom.current - o.zoom) * f
