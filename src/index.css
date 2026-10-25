@@ -59,6 +59,7 @@
   --space-4:  1rem;
   --space-5:  1.25rem;
   --space-6:  1.5rem;
+  --space-7:  1.75rem;
   --space-8:  2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
@@ -1109,37 +1110,264 @@ button:focus-visible {
    LAKAW NAGA — TRAVEL EXPERIENCE EXTENSIONS
    ══════════════════════════════════════════════ */
 
-/* ── Map / Geo Toggle ── */
-.map-mode-toggle {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(48,46,42,0.55);
-  border: 1px solid rgba(245,240,229,0.18);
-  border-radius: var(--radius-full);
-  backdrop-filter: blur(10px);
-  padding: 3px;
-}
-
-.map-mode-btn {
+/* ── History Button ── */
+.history-btn {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: rgba(245,240,229,0.65);
+  color: rgba(245,240,229,0.75);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
-  border: none;
-  background: none;
+  border: 1px solid rgba(245,240,229,0.2);
+  background: rgba(48,46,42,0.55);
+  backdrop-filter: blur(10px);
 }
 
-.map-mode-btn.active {
+.history-btn:hover {
+  background: rgba(194,154,81,0.2);
+  border-color: rgba(194,154,81,0.45);
+  color: var(--ivory);
+}
+
+.history-btn.active {
   background: var(--gold);
+  border-color: var(--gold);
   color: var(--charcoal);
+}
+
+/* ── History Modal ── */
+.history-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 12, 8, 0.72);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  cursor: pointer;
+}
+
+.history-modal-center {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 501;
+  pointer-events: none;
+}
+
+.history-modal-wrap {
+  pointer-events: all;
+  width: min(94vw, 860px);
+  max-height: 88vh;
+  background: var(--ivory);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(194,154,81,0.25);
+}
+
+.history-modal-hero {
+  background: linear-gradient(135deg, #302E2A 0%, #7B3038 60%, #4A2A18 100%);
+  padding: var(--space-7) var(--space-7) var(--space-6);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.history-modal-hero-content {
+  max-width: 620px;
+}
+
+.history-modal-eyebrow {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(194,154,81,0.85);
+  margin-bottom: var(--space-2);
+}
+
+.history-modal-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  color: var(--ivory);
+  line-height: 1.15;
+  margin-bottom: var(--space-2);
+}
+
+.history-modal-subtitle {
+  font-size: var(--font-size-sm);
+  color: rgba(245,240,229,0.65);
+  margin: 0;
+}
+
+.history-modal-close {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--ivory);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast);
+}
+
+.history-modal-close:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+.history-modal-body {
+  overflow-y: auto;
+  padding: var(--space-6) var(--space-7) var(--space-8);
+  flex: 1;
+  scroll-behavior: smooth;
+}
+
+/* Stat cards row */
+.history-stat-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.history-stat-card {
+  flex: 1 1 120px;
+  background: white;
+  border: 1px solid rgba(194,154,81,0.22);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-4);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.history-stat-value {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  line-height: 1;
+  margin-bottom: var(--space-1);
+}
+
+.history-stat-label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+
+.history-stat-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* Timeline */
+.history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.history-section {
+  display: flex;
+  gap: var(--space-5);
+  padding-bottom: var(--space-7);
+}
+
+.history-section-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 44px;
+}
+
+.history-section-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.history-section-line {
+  width: 2px;
+  flex: 1;
+  background: linear-gradient(180deg, rgba(194,154,81,0.4) 0%, rgba(194,154,81,0.08) 100%);
+  margin-top: var(--space-2);
+  border-radius: 1px;
+  min-height: 24px;
+}
+
+.history-section:last-child .history-section-line {
+  display: none;
+}
+
+.history-section-body {
+  flex: 1;
+  padding-top: var(--space-1);
+  min-width: 0;
+}
+
+.history-section-period {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-1);
+}
+
+.history-section-title {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-xl);
+  color: var(--charcoal);
+  line-height: 1.25;
+  margin-bottom: var(--space-3);
+}
+
+.history-section-para {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin-bottom: var(--space-3);
+}
+
+.history-section-para:last-child {
+  margin-bottom: 0;
+}
+
+.history-footer-note {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  opacity: 0.55;
+  font-style: italic;
+  text-align: center;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 /* ── Breadcrumb ── */
@@ -1328,6 +1556,23 @@ button:focus-visible {
 .journal-body::-webkit-scrollbar-thumb {
   background: var(--border-warm);
   border-radius: var(--radius-full);
+}
+
+.journal-dest-image-wrap {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+  background: #111;
+}
+.journal-dest-image {
+  width: 100%;
+  height: auto;
+  max-height: 340px;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
 }
 
 .journal-description {

@@ -3,10 +3,11 @@ import { useAppStore } from '../../store/appStore'
 import { destinationMap } from '../../data/destinations'
 
 const categoryColors: Record<string, { bg: string; text: string }> = {
-  history: { bg: 'rgba(194,154,81,0.15)', text: '#C29A51' },
-  food:    { bg: 'rgba(185,104,72,0.15)', text: '#B96848' },
-  faith:   { bg: 'rgba(123,48,56,0.15)',  text: '#7B3038' },
-  nature:  { bg: 'rgba(49,91,67,0.15)',   text: '#315B43' },
+  history:  { bg: 'rgba(194,154,81,0.15)', text: '#C29A51' },
+  food:     { bg: 'rgba(185,104,72,0.15)', text: '#B96848' },
+  faith:    { bg: 'rgba(123,48,56,0.15)',  text: '#7B3038' },
+  nature:   { bg: 'rgba(49,91,67,0.15)',   text: '#315B43' },
+  landmark: { bg: 'rgba(123,48,56,0.12)',  text: '#7B3038' },
 }
 
 export function TravelJournal() {
@@ -71,7 +72,22 @@ export function TravelJournal() {
 
             {/* Body */}
             <div className="journal-body">
-              <p className="journal-description">{dest.description}</p>
+              {dest.image && (
+                <div className="journal-dest-image-wrap">
+                  <img
+                    src={dest.image}
+                    alt={dest.name}
+                    className="journal-dest-image"
+                  />
+                </div>
+              )}
+              <div className="journal-description">
+                {dest.description.split('\n\n').map((block, i) => (
+                  <p key={i} style={{ margin: i > 0 ? '0.75em 0 0' : '0', whiteSpace: 'pre-line' }}>
+                    {block}
+                  </p>
+                ))}
+              </div>
 
               {/* Highlights */}
               <div className="journal-highlights">

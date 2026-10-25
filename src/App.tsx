@@ -9,13 +9,10 @@ import { DestinationSearch } from './components/ui/DestinationSearch'
 import { ItineraryBar } from './components/ui/ItineraryBar'
 import { TravelJournal } from './components/travel/TravelJournal'
 import { KinalasTrail } from './components/travel/KinalasTrail'
+import { NagaHistory } from './components/travel/NagaHistory'
 import { RobredoMuseum } from './components/museum/RobredoMuseum'
 import { destinations } from './data/destinations'
 import type { DestinationId } from './data/destinations'
-
-// Lazy-load GeoMap to avoid bundling Leaflet into the main chunk
-import { lazy } from 'react'
-const GeoMap = lazy(() => import('./components/map/GeoMap').then((m) => ({ default: m.GeoMap })))
 
 // Accessible fallback for users without WebGL
 function AccessibleFallback() {
@@ -46,25 +43,17 @@ function AccessibleFallback() {
 }
 
 export default function App() {
-  const { mapMode, activeView, isLoading, searchOpen, itinerary } = useAppStore()
+  const { activeView, isLoading, searchOpen, itinerary } = useAppStore()
 
   return (
     <div className="app-container">
       <LoadingScreen />
 
-      {/* 3D scene always mounted; geo map shown on top when mode = 'geo' */}
+      {/* 3D scene */}
       <div className="scene-container">
         <Suspense fallback={<AccessibleFallback />}>
           <CityMap />
         </Suspense>
-
-        <AnimatePresence>
-          {mapMode === 'geo' && (
-            <Suspense fallback={null}>
-              <GeoMap />
-            </Suspense>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Header (brand + breadcrumb + controls) */}
@@ -74,7 +63,7 @@ export default function App() {
       {!isLoading && <DestinationNav />}
 
       {/* Hint */}
-      {!isLoading && mapMode === '3d' && activeView === 'map' && (
+      {!isLoading && activeView === 'map' && (
         <div className="hint-overlay" aria-hidden="true">
           <span className="hint-text">Click a zone to explore · Drag to pan</span>
         </div>
@@ -88,6 +77,9 @@ export default function App() {
 
       {/* Food trail panel */}
       <KinalasTrail />
+
+      {/* Naga City History panel */}
+      <NagaHistory />
 
       {/* Itinerary bar (shown when stops added) */}
       {itinerary.length > 0 && <ItineraryBar />}

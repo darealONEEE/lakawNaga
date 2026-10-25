@@ -1,7 +1,7 @@
 import { useAppStore } from '../../store/appStore'
 
 export function Header() {
-  const { mapMode, setMapMode, breadcrumb, closeDestination, setSearchOpen, searchOpen } = useAppStore()
+  const { breadcrumb, closeDestination, setSearchOpen, searchOpen, historyOpen, setHistoryOpen } = useAppStore()
 
   return (
     <header className="site-header" role="banner">
@@ -45,31 +45,19 @@ export function Header() {
           </svg>
         </button>
 
-        {/* Map mode toggle */}
-        <div className="map-mode-toggle" role="group" aria-label="Map mode">
-          <button
-            className={`map-mode-btn${mapMode === '3d' ? ' active' : ''}`}
-            onClick={() => setMapMode('3d')}
-            aria-pressed={mapMode === '3d'}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            </svg>
-            3D
-          </button>
-          <button
-            className={`map-mode-btn${mapMode === 'geo' ? ' active' : ''}`}
-            onClick={() => setMapMode('geo')}
-            aria-pressed={mapMode === 'geo'}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            Map
-          </button>
-        </div>
+        {/* Naga City History */}
+        <button
+          className={`history-btn${historyOpen ? ' active' : ''}`}
+          onClick={() => setHistoryOpen(!historyOpen)}
+          aria-label="Naga City History"
+          aria-pressed={historyOpen}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          History
+        </button>
       </div>
     </header>
   )
