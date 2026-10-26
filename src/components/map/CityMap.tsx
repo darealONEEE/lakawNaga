@@ -1249,8 +1249,8 @@ function IsarogZone({ selected }: { selected: boolean }) {
   })
 
   // All-green palette
-  const gBase  = '#3E6B24', gMid = '#4A7A2C', gBright = '#5A8A36'
-  const gLight = '#6A9A42', capW = '#D0D8C8'
+  const gBase  = '#3E6B24', gMid = '#4A7A2C'
+  const capW = '#D0D8C8'
   const water  = '#4A88B8', waterH = '#6AA8D0'
 
   return (
