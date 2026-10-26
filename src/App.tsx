@@ -1,11 +1,9 @@
 import { Suspense } from 'react'
-import { AnimatePresence } from 'framer-motion'
 import { useAppStore } from './store/appStore'
 import { CityMap } from './components/map/CityMap'
 import { Header } from './components/ui/Header'
 import { DestinationNav } from './components/ui/DestinationNav'
 import { LoadingScreen } from './components/ui/LoadingScreen'
-import { DestinationSearch } from './components/ui/DestinationSearch'
 import { ItineraryBar } from './components/ui/ItineraryBar'
 import { TravelJournal } from './components/travel/TravelJournal'
 import { KinalasTrail } from './components/travel/KinalasTrail'
@@ -43,7 +41,7 @@ function AccessibleFallback() {
 }
 
 export default function App() {
-  const { activeView, isLoading, searchOpen, itinerary } = useAppStore()
+  const { activeView, isLoading, itinerary } = useAppStore()
 
   return (
     <div className="app-container">
@@ -84,10 +82,6 @@ export default function App() {
       {/* Itinerary bar (shown when stops added) */}
       {itinerary.length > 0 && <ItineraryBar />}
 
-      {/* Search overlay */}
-      <AnimatePresence>
-        {searchOpen && <DestinationSearch />}
-      </AnimatePresence>
     </div>
   )
 }

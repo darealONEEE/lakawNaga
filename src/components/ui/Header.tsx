@@ -1,7 +1,7 @@
 import { useAppStore } from '../../store/appStore'
 
 export function Header() {
-  const { breadcrumb, closeDestination, setSearchOpen, searchOpen, historyOpen, setHistoryOpen } = useAppStore()
+  const { breadcrumb, closeDestination, historyOpen, setHistoryOpen } = useAppStore()
 
   return (
     <header className="site-header" role="banner">
@@ -32,19 +32,6 @@ export function Header() {
 
       {/* Controls */}
       <div className="header-nav">
-        {/* Search */}
-        <button
-          className="search-toggle-btn"
-          onClick={() => setSearchOpen(!searchOpen)}
-          aria-label="Search destinations"
-          aria-expanded={searchOpen}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
-          </svg>
-        </button>
-
         {/* Naga City History */}
         <button
           className={`history-btn${historyOpen ? ' active' : ''}`}

@@ -16,8 +16,6 @@ export function TravelJournal() {
     activeView,
     closeDestination,
     setActiveView,
-    addToItinerary,
-    itinerary,
   } = useAppStore()
 
   const isOpen =
@@ -26,7 +24,6 @@ export function TravelJournal() {
 
   const dest = selectedDestination ? destinationMap[selectedDestination] : null
   const colors = dest ? categoryColors[dest.category] : categoryColors.history
-  const inItinerary = dest ? itinerary.some((s) => s.destinationId === dest.id) : false
 
   const handleOpenMuseum = () => {
     if (selectedDestination === 'robredo') setActiveView('museum')
@@ -34,12 +31,6 @@ export function TravelJournal() {
 
   const handleOpenFoodTrail = () => {
     if (selectedDestination === 'kinalas') setActiveView('food-trail')
-  }
-
-  const handleAddItinerary = () => {
-    if (dest && !inItinerary) {
-      addToItinerary({ destinationId: dest.id, note: '' })
-    }
   }
 
   return (
@@ -128,14 +119,6 @@ export function TravelJournal() {
 
             {/* Footer actions */}
             <div className="journal-actions">
-              <button
-                className="journal-btn-primary"
-                onClick={handleAddItinerary}
-                disabled={inItinerary}
-                aria-label={inItinerary ? 'Already in itinerary' : `Add ${dest.name} to itinerary`}
-              >
-                {inItinerary ? '✓ In Itinerary' : '+ Add to Itinerary'}
-              </button>
               <button
                 className="journal-btn-secondary"
                 onClick={closeDestination}

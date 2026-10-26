@@ -9,14 +9,13 @@ const categoryColors: Record<string, string> = {
 }
 
 export function DestinationNav() {
-  const { selectedDestination, selectDestination, itinerary } = useAppStore()
+  const { selectedDestination, selectDestination } = useAppStore()
 
   return (
     <nav className="destination-nav" aria-label="Destinations">
       <div className="destination-nav-row">
         {destinations.map((dest) => {
           const isActive = selectedDestination === dest.id
-          const inItinerary = itinerary.some((s) => s.destinationId === dest.id)
           return (
             <button
               key={dest.id}
@@ -28,20 +27,6 @@ export function DestinationNav() {
               aria-pressed={isActive}
               aria-label={`${dest.name} — ${dest.tagline}`}
             >
-              {inItinerary && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: categoryColors[dest.category],
-                  }}
-                  aria-hidden="true"
-                />
-              )}
               <span
                 className="destination-btn-category"
                 style={{ color: categoryColors[dest.category] }}

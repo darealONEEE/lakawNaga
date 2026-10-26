@@ -1162,8 +1162,8 @@ button:focus-visible {
 
 .history-modal-wrap {
   pointer-events: all;
-  width: min(94vw, 860px);
-  max-height: 88vh;
+  width: min(98vw, 1140px);
+  max-height: 94vh;
   background: var(--ivory);
   border-radius: 20px;
   overflow: hidden;
@@ -1368,6 +1368,350 @@ button:focus-visible {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
   border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+/* ── History Modal — Tab bar ── */
+.history-tab-bar {
+  display: flex;
+  gap: 2px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--charcoal);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.history-tab-bar::-webkit-scrollbar { display: none; }
+
+.history-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: rgba(245,240,229,0.55);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.18s, background 0.18s;
+  letter-spacing: 0.01em;
+}
+
+.history-tab:hover {
+  color: rgba(245,240,229,0.85);
+  background: rgba(255,255,255,0.07);
+}
+
+.history-tab.active {
+  color: var(--gold);
+  background: rgba(194,154,81,0.15);
+}
+
+.history-tab.active svg {
+  stroke: var(--gold);
+}
+
+/* ── Mayors tab content ── */
+.history-mayors-header {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+.history-mayors-title {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-2xl);
+  color: var(--charcoal);
+  margin-bottom: var(--space-2);
+}
+
+.history-mayors-sub {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.history-mayor-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.history-mayor-card {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.18s;
+}
+
+.history-mayor-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.history-mayor-card.highlight {
+  border-color: rgba(194,154,81,0.4);
+  background: linear-gradient(135deg, #fffdf7 0%, #fff9ec 100%);
+  box-shadow: 0 2px 12px rgba(194,154,81,0.15), var(--shadow-sm);
+}
+
+.history-mayor-card.current {
+  border-color: rgba(49,91,67,0.35);
+  background: linear-gradient(135deg, #f6fdf8 0%, #eef8f1 100%);
+  box-shadow: 0 2px 12px rgba(49,91,67,0.12), var(--shadow-sm);
+}
+
+.history-mayor-icon-wrap {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-full);
+  background: var(--ivory-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-top: 2px;
+}
+
+.history-mayor-card.highlight .history-mayor-icon-wrap {
+  background: rgba(194,154,81,0.18);
+}
+
+.history-mayor-card.current .history-mayor-icon-wrap {
+  background: rgba(49,91,67,0.14);
+}
+
+.history-mayor-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-mayor-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+.history-mayor-name {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-lg);
+  color: var(--charcoal);
+  line-height: 1.25;
+  margin: 0;
+}
+
+.history-mayor-badges {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.history-mayor-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  line-height: 1.6;
+}
+
+.badge-current {
+  background: rgba(49,91,67,0.12);
+  color: var(--forest);
+  border: 1px solid rgba(49,91,67,0.25);
+}
+
+.badge-award {
+  background: rgba(194,154,81,0.14);
+  color: #8A6A2A;
+  border: 1px solid rgba(194,154,81,0.35);
+}
+
+.history-mayor-term {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.history-mayor-award {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: #8A6A2A;
+  margin-bottom: var(--space-2);
+  letter-spacing: 0.02em;
+}
+
+.history-mayor-award svg {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.history-mayor-note {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Tourist Spots tab ── */
+.history-spots-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.history-spot-card {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-spot-icon-wrap {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-full);
+  background: var(--ivory-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-top: 2px;
+}
+
+.history-spot-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-spot-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.history-spot-name {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-lg);
+  color: var(--charcoal);
+  line-height: 1.25;
+  margin: 0;
+}
+
+.history-spot-category {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  line-height: 1.6;
+}
+
+.history-spot-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0 0 var(--space-3);
+}
+
+.history-spot-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--forest);
+  background: rgba(49,91,67,0.07);
+  border: 1px solid rgba(49,91,67,0.15);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  line-height: 1.5;
+}
+
+.history-spot-tip svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  stroke: var(--forest);
+}
+
+/* ── Barangays tab ── */
+.history-brgy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 520px) {
+  .history-brgy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.history-brgy-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-brgy-num {
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.8;
+  letter-spacing: 0.03em;
+}
+
+.history-brgy-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-brgy-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--charcoal);
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.history-brgy-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* ── Breadcrumb ── */

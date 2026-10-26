@@ -486,7 +486,7 @@ function Ground() {
         <meshLambertMaterial color="#C8BC9C" />
       </mesh>
       {/* Unified platform base — covers city + mountain area as one board */}
-      <B x={0} y={-0.13} z={-13} w={34.4} h={0.26} d={60} color="#9E8E6E" shadow={false} />
+      <B x={0} y={-0.20} z={-13} w={34.4} h={0.26} d={60} color="#9E8E6E" shadow={false} />
 
       {/* Main cross roads */}
       <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.01,0]}>
@@ -510,12 +510,12 @@ function Ground() {
 
       {/* Secondary streets */}
       {([-5.2, 5.2] as number[]).map((sx,i) => (
-        <mesh key={`sx${i}`} rotation={[-Math.PI/2,0,0]} position={[sx,0.01,0]}>
+        <mesh key={`sx${i}`} rotation={[-Math.PI/2,0,0]} position={[sx,0.013,0]}>
           <planeGeometry args={[0.75,34]} /><meshLambertMaterial color="#C0B59C" />
         </mesh>
       ))}
       {([-4.8, 4.8] as number[]).map((sz,i) => (
-        <mesh key={`sz${i}`} rotation={[-Math.PI/2,0,0]} position={[0,0.01,sz]}>
+        <mesh key={`sz${i}`} rotation={[-Math.PI/2,0,0]} position={[0,0.013,sz]}>
           <planeGeometry args={[34,0.75]} /><meshLambertMaterial color="#C0B59C" />
         </mesh>
       ))}
@@ -525,7 +525,7 @@ function Ground() {
         <circleGeometry args={[2.2,18]} /><meshLambertMaterial color="#D8CEB2" />
       </mesh>
       <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.025,0]}>
-        <ringGeometry args={[2.02,2.22,18]} /><meshLambertMaterial color="#C29A51" transparent opacity={0.55} />
+        <ringGeometry args={[2.02,2.22,18]} /><meshLambertMaterial color="#C29A51" transparent opacity={0.55} depthWrite={false} />
       </mesh>
       {/* Paving stones */}
       {Array.from({ length: 12 }, (_, i) => {
@@ -538,7 +538,7 @@ function Ground() {
       })}
       {/* Plaza paths from center in 4 directions */}
       {([0, Math.PI/2, Math.PI, -Math.PI/2] as number[]).map((a,i) => (
-        <mesh key={`pp${i}`} rotation={[-Math.PI/2,0,0]} position={[Math.cos(a)*3.5, 0.015, Math.sin(a)*3.5]}>
+        <mesh key={`pp${i}`} rotation={[-Math.PI/2,0,0]} position={[Math.cos(a)*3.5, 0.019, Math.sin(a)*3.5]}>
           <planeGeometry args={[0.9, 4.2]} />
           <meshLambertMaterial color="#D0C4A0" />
         </mesh>
@@ -658,18 +658,24 @@ function WalkingPerson({ path, speed=1.0, offset=0, shirtColor='#4488CC', skinCo
 
 function WalkingPeople() {
   const defs = [
-    { path:[[ 0.40, 12],[ 0.40,-12]] as [number,number][], speed:0.90, offset:0.05, shirt:'#4488CC', skin:'#D4A874' },
-    { path:[[-0.38,-12],[-0.38, 12]] as [number,number][], speed:1.10, offset:0.55, shirt:'#CC4444', skin:'#C49060' },
-    { path:[[-12, -0.38],[ 12,-0.38]] as [number,number][], speed:1.00, offset:0.25, shirt:'#44AA66', skin:'#E0B88A' },
-    { path:[[ 12,  0.38],[-12, 0.38]] as [number,number][], speed:0.85, offset:0.72, shirt:'#BB6622', skin:'#D4A874' },
-    { path:[[-5.2,-11],[-5.2, 11]] as [number,number][], speed:1.15, offset:0.18, shirt:'#8844CC', skin:'#C49060' },
-    { path:[[ 5.2, 11],[ 5.2,-11]] as [number,number][], speed:0.95, offset:0.62, shirt:'#22AAAA', skin:'#D4A874' },
-    { path:[[-11, 4.8],[ 11, 4.8]] as [number,number][], speed:1.05, offset:0.35, shirt:'#CC8844', skin:'#E0B88A' },
-    { path:[[ 11,-4.8],[-11,-4.8]] as [number,number][], speed:0.90, offset:0.80, shirt:'#6688CC', skin:'#C49060' },
-    { path:[[ 0.40, 6],[ 0.40,-6]] as [number,number][], speed:1.20, offset:0.42, shirt:'#DD4488', skin:'#D4A874' },
-    { path:[[-5.2, 0],[ 5.2, 0]] as [number,number][], speed:1.00, offset:0.68, shirt:'#44BB44', skin:'#E0B88A' },
-    { path:[[ 0.38, 12],[ 4.0, 12],[4.0, 6],[12, 6]] as [number,number][], speed:0.80, offset:0.10, shirt:'#FF8822', skin:'#C49060' },
-    { path:[[-0.38,-12],[-5.2,-12],[-5.2,-6],[-12,-6]] as [number,number][], speed:0.95, offset:0.50, shirt:'#2288EE', skin:'#D4A874' },
+    // Main N-S road — sidewalks clear of perimeter buildings
+    { path:[[ 0.40, 10],[ 0.40,-10]] as [number,number][], speed:0.48, offset:0.05, shirt:'#4488CC', skin:'#D4A874' },
+    { path:[[-0.38,-10],[-0.38, 10]] as [number,number][], speed:0.55, offset:0.55, shirt:'#CC4444', skin:'#C49060' },
+    // Main E-W road — sidewalks clear of east/west column buildings
+    { path:[[-10, -0.38],[ 10,-0.38]] as [number,number][], speed:0.50, offset:0.25, shirt:'#44AA66', skin:'#E0B88A' },
+    { path:[[ 10,  0.38],[-10, 0.38]] as [number,number][], speed:0.42, offset:0.72, shirt:'#BB6622', skin:'#D4A874' },
+    // Secondary N-S roads — stop before perimeter building row at z=±10
+    { path:[[-5.2,-8],[-5.2, 8]] as [number,number][], speed:0.52, offset:0.18, shirt:'#8844CC', skin:'#C49060' },
+    { path:[[ 5.2, 8],[ 5.2,-8]] as [number,number][], speed:0.46, offset:0.62, shirt:'#22AAAA', skin:'#D4A874' },
+    // Secondary E-W roads — stop before east/west column buildings at x=±11
+    { path:[[-10, 4.8],[ 10, 4.8]] as [number,number][], speed:0.50, offset:0.35, shirt:'#CC8844', skin:'#E0B88A' },
+    { path:[[ 10,-4.8],[-10,-4.8]] as [number,number][], speed:0.44, offset:0.80, shirt:'#6688CC', skin:'#C49060' },
+    // Short central paths
+    { path:[[ 0.40, 5],[ 0.40,-5]] as [number,number][], speed:0.55, offset:0.42, shirt:'#DD4488', skin:'#D4A874' },
+    { path:[[-5.2, 0],[ 5.2, 0]] as [number,number][], speed:0.48, offset:0.68, shirt:'#44BB44', skin:'#E0B88A' },
+    // Corner paths routed along proper road intersections
+    { path:[[ 0.40, 8],[0.40, 4.8],[10, 4.8]] as [number,number][], speed:0.40, offset:0.10, shirt:'#FF8822', skin:'#C49060' },
+    { path:[[-0.40,-8],[-0.40,-4.8],[-10,-4.8]] as [number,number][], speed:0.46, offset:0.50, shirt:'#2288EE', skin:'#D4A874' },
   ]
   return (
     <>{defs.map((d,i) => (
@@ -803,7 +809,7 @@ function BasilicaZone({ selected }: { selected: boolean }) {
       <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.01,2.8]}>
         <planeGeometry args={[1.0,4.2]} /><meshLambertMaterial color="#C8C0A8" />
       </mesh>
-      <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.01,2.8]}>
+      <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.012,2.8]}>
         <planeGeometry args={[3.8,0.85]} /><meshLambertMaterial color="#C8C0A8" />
       </mesh>
 
@@ -1221,7 +1227,7 @@ function MalabsayFalls({ x=0, y=0, z=0 }: { x?:number; y?:number; z?:number }) {
       </mesh>
       <mesh rotation={[-Math.PI/2,0,0]} position={[0, 0.07, 1.0]}>
         <planeGeometry args={[0.9, 0.6]} />
-        <meshLambertMaterial color={spray} transparent opacity={0.55} />
+        <meshLambertMaterial color={spray} transparent opacity={0.55} depthWrite={false} />
       </mesh>
       {/* Boulders */}
       <mesh position={[-0.8, 0.15, 1.4]} castShadow>
@@ -1254,7 +1260,7 @@ function IsarogZone({ selected }: { selected: boolean }) {
         <planeGeometry args={[4.3,2.2]} /><meshLambertMaterial color={water} />
       </mesh>
       <mesh rotation={[-Math.PI/2,0,0]} position={[-1.4,0.018,12.8]}>
-        <planeGeometry args={[1.8,0.7]} /><meshLambertMaterial color={waterH} transparent opacity={0.6} />
+        <planeGeometry args={[1.8,0.7]} /><meshLambertMaterial color={waterH} transparent opacity={0.6} depthWrite={false} />
       </mesh>
       <mesh rotation={[-Math.PI/2,0,0]} position={[1.2,0.015,15.0]}>
         <planeGeometry args={[1.1,3.2]} /><meshLambertMaterial color={water} />
@@ -1426,28 +1432,113 @@ function SurroundingCity() {
   )
 }
 
+// ── Drive-along path follower ──────────────────────────────────────────────────
+function DriveAlong({ path, speed=1, offset=0, children }: {
+  path: [number,number][];
+  speed?: number;
+  offset?: number;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<THREE.Group>(null)
+  const t   = useRef(offset % 1)
+  useFrame((_, dt) => {
+    t.current = (t.current + dt * speed * 0.055) % 1
+    const n = path.length, pos = t.current * (n - 1)
+    const i0 = Math.min(Math.floor(pos), n - 2)
+    const f  = pos - i0
+    const [x1, z1] = path[i0], [x2, z2] = path[i0 + 1]
+    if (!ref.current) return
+    ref.current.position.set(x1 + (x2 - x1) * f, 0, z1 + (z2 - z1) * f)
+    const dx = x2 - x1, dz = z2 - z1
+    if (Math.abs(dx) + Math.abs(dz) > 0.001)
+      ref.current.rotation.y = Math.atan2(-dz, dx)
+  })
+  return <group ref={ref}>{children}</group>
+}
+
 // ── Vehicles ───────────────────────────────────────────────────────────────────
 function Vehicles() {
+  // Lanes: main N-S road x=+0.40 southbound, x=-0.38 northbound
+  //        main E-W road z=-0.38 westbound,  z=+0.40 eastbound
+  //        secondary N-S x=±5.2; secondary E-W z=±4.8
+  // Main roads reach the gate openings in the fence (z/x ≈ ±13)
+  const NS_S  : [number,number][] = [[ 0.40, 12], [ 0.40,-12]]
+  const NS_N  : [number,number][] = [[-0.38,-12], [-0.38, 12]]
+  const EW_E  : [number,number][] = [[-12,  0.40], [12,  0.40]]
+  const EW_W  : [number,number][] = [[ 12, -0.38], [-12,-0.38]]
+  // Secondary roads stop before perimeter buildings (z=±10, x=±11)
+  const SEC_S1: [number,number][] = [[ 5.35,  9], [ 5.35, -9]]
+  const SEC_N1: [number,number][] = [[-5.05, -9], [-5.05,  9]]
+  const SEC_E1: [number,number][] = [[-10,  4.95], [10,  4.95]]
+  const SEC_W1: [number,number][] = [[ 10, -4.65], [-10, -4.65]]
+  const SEC_S2: [number,number][] = [[ 5.35,  9], [ 5.35, -9]]
+  const SEC_N2: [number,number][] = [[-5.05, -9], [-5.05,  9]]
+
   return (
     <>
-      <Jeepney x={-9} z={ 0.40} rot={0}         body="#CC2222" stripe="#F0C040" />
-      <Jeepney x={ 8} z={-0.38} rot={Math.PI}   body="#1A4499" stripe="#F0C040" />
-      <Jeepney x={-2.5} z={ 5.0} rot={0}        body="#228844" stripe="#FFEE44" />
-      <Jeepney x={ 3.0} z={-5.0} rot={Math.PI}  body="#AA2244" stripe="#F0C040" />
-      <Bus x={ 0.40} z={-10.5} rot={ Math.PI/2} color="#1E3A88" />
-      <Bus x={-0.40} z={ 10.8} rot={-Math.PI/2} color="#2B5BAA" />
-      <Car x={ 0.40} z={-8.0} rot={ Math.PI/2}  color="#884422" />
-      <Car x={-0.38} z={ 9.2} rot={-Math.PI/2}  color="#3A6A99" />
-      <Car x={-5.5}  z={-9.5} rot={ Math.PI/2}  color="#447744" />
-      <Car x={ 5.5}  z={ 9.5} rot={-Math.PI/2}  color="#664488" />
-      <Car x={-10.8} z={-0.38} rot={0}           color="#557799" />
-      <Car x={ 10.8} z={ 0.40} rot={Math.PI}     color="#776655" />
-      <Car x={ 5.2}  z={-9.5} rot={-Math.PI/2}   color="#CC5544" />
-      <Car x={-5.2}  z={ 9.5} rot={ Math.PI/2}   color="#447755" />
-      <Tricycle x={-4.0} z={5.8} rot={Math.PI*0.75} color="#FF8800" />
-      <Tricycle x={ 4.5} z={6.0} rot={Math.PI*0.25} color="#EE7700" />
-      <Tricycle x={ 9.0} z={4.8} rot={Math.PI*1.25} color="#FF6600" />
-      <Car x={-9.0} z={ 4.8} rot={-Math.PI/2}    color="#885533" />
+      {/* Jeepneys — main roads */}
+      <DriveAlong path={NS_S}  speed={0.78} offset={0.05}>
+        <Jeepney x={0} z={0} rot={0} body="#CC2222" stripe="#F0C040" />
+      </DriveAlong>
+      <DriveAlong path={NS_N}  speed={0.88} offset={0.55}>
+        <Jeepney x={0} z={0} rot={0} body="#1A4499" stripe="#F0C040" />
+      </DriveAlong>
+      <DriveAlong path={EW_E}  speed={0.82} offset={0.25}>
+        <Jeepney x={0} z={0} rot={0} body="#228844" stripe="#FFEE44" />
+      </DriveAlong>
+      <DriveAlong path={EW_W}  speed={0.74} offset={0.72}>
+        <Jeepney x={0} z={0} rot={0} body="#AA2244" stripe="#F0C040" />
+      </DriveAlong>
+
+      {/* Buses — main roads, slower */}
+      <DriveAlong path={NS_S}  speed={0.50} offset={0.38}>
+        <Bus x={0} z={0} rot={0} color="#1E3A88" />
+      </DriveAlong>
+      <DriveAlong path={NS_N}  speed={0.48} offset={0.82}>
+        <Bus x={0} z={0} rot={0} color="#2B5BAA" />
+      </DriveAlong>
+
+      {/* Cars — main roads */}
+      <DriveAlong path={NS_S}  speed={1.05} offset={0.18}>
+        <Car x={0} z={0} rot={0} color="#884422" />
+      </DriveAlong>
+      <DriveAlong path={NS_N}  speed={1.10} offset={0.65}>
+        <Car x={0} z={0} rot={0} color="#3A6A99" />
+      </DriveAlong>
+      <DriveAlong path={EW_E}  speed={1.00} offset={0.42}>
+        <Car x={0} z={0} rot={0} color="#776655" />
+      </DriveAlong>
+      <DriveAlong path={EW_W}  speed={0.95} offset={0.88}>
+        <Car x={0} z={0} rot={0} color="#557799" />
+      </DriveAlong>
+
+      {/* Cars — secondary roads */}
+      <DriveAlong path={SEC_S1} speed={1.15} offset={0.10}>
+        <Car x={0} z={0} rot={0} color="#447744" />
+      </DriveAlong>
+      <DriveAlong path={SEC_N1} speed={1.00} offset={0.60}>
+        <Car x={0} z={0} rot={0} color="#664488" />
+      </DriveAlong>
+      <DriveAlong path={SEC_S2} speed={0.90} offset={0.35}>
+        <Car x={0} z={0} rot={0} color="#CC5544" />
+      </DriveAlong>
+      <DriveAlong path={SEC_N2} speed={0.85} offset={0.80}>
+        <Car x={0} z={0} rot={0} color="#447755" />
+      </DriveAlong>
+      <DriveAlong path={EW_W}   speed={1.05} offset={0.50}>
+        <Car x={0} z={0} rot={0} color="#885533" />
+      </DriveAlong>
+
+      {/* Tricycles — secondary E-W roads, slower weave */}
+      <DriveAlong path={SEC_E1} speed={0.62} offset={0.15}>
+        <Tricycle x={0} z={0} rot={0} color="#FF8800" />
+      </DriveAlong>
+      <DriveAlong path={SEC_W1} speed={0.58} offset={0.58}>
+        <Tricycle x={0} z={0} rot={0} color="#EE7700" />
+      </DriveAlong>
+      <DriveAlong path={NS_N}   speed={0.70} offset={0.30}>
+        <Tricycle x={0} z={0} rot={0} color="#FF6600" />
+      </DriveAlong>
     </>
   )
 }
@@ -1523,7 +1614,7 @@ export function CityMap() {
 
   return (
     <Canvas orthographic
-      camera={{ position:[20,20,20], zoom:ISO_ZOOM, near:0.1, far:320 }}
+      camera={{ position:[20,20,20], zoom:ISO_ZOOM, near:1, far:320 }}
       gl={{ alpha:false }}
       shadows dpr={[1,1.5]}
       onCreated={({ camera, gl }) => {
