@@ -24,6 +24,7 @@ interface AppState {
   isLoading: boolean
   reducedMotion: boolean
   historyOpen: boolean
+  penafranciaModeActive: boolean
 
   setMapMode: (mode: MapMode) => void
   setActiveView: (view: ActiveView) => void
@@ -40,6 +41,7 @@ interface AppState {
   setCategoryFilter: (filter: AppState['categoryFilter']) => void
   setLoading: (loading: boolean) => void
   setHistoryOpen: (open: boolean) => void
+  setPenafranciaModeActive: (active: boolean) => void
 }
 
 const crumbLabels: Record<DestinationId, string> = {
@@ -64,6 +66,7 @@ export const useAppStore = create<AppState>((set) => ({
   categoryFilter: 'all',
   isLoading: true,
   historyOpen: false,
+  penafranciaModeActive: false,
   reducedMotion:
     typeof window !== 'undefined'
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -115,4 +118,5 @@ export const useAppStore = create<AppState>((set) => ({
   setCategoryFilter: (filter) => set({ categoryFilter: filter }),
   setLoading: (loading) => set({ isLoading: loading }),
   setHistoryOpen: (open) => set({ historyOpen: open, activeView: open ? 'history' : 'map' }),
+  setPenafranciaModeActive: (active) => set({ penafranciaModeActive: active }),
 }))

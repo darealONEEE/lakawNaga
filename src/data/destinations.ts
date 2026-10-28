@@ -27,8 +27,8 @@ export const destinations: Destination[] = [
     color: '#7B3038',
     accentColor: '#C29A51',
     coords: { lat: 13.6214, lng: 123.1945 },
-    scene3dPos: [0, 0, 0],
-    sceneLookAt: [0, 1.0, 0],
+    scene3dPos: [7, 0, -5],
+    sceneLookAt: [7, 1.0, -5],
     description:
       'Plaza Quince Martires is the historic central square of Naga City, named in honor of fifteen Filipino martyrs who perished during the Spanish colonial period. At its heart stands the Quince Martires Monument — a multi-tiered marble pedestal crowned with bronze allegorical figures and an eagle, symbolizing courage and the aspiration for freedom. Since the colonial era, this plaza has served as the civic, cultural, and spiritual center of Naga, flanked by the Naga City Hall and surrounded by the old colonial streetscape.',
     highlights: [

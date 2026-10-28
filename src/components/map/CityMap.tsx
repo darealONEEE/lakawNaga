@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useRef, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
+import { Text, Billboard } from '@react-three/drei'
 import * as THREE from 'three'
 import { useAppStore } from '../../store/appStore'
 import { destinations, type DestinationId } from '../../data/destinations'
@@ -463,7 +463,7 @@ function QuinceMartiresZone({ selected }: { selected: boolean }) {
     ref.current.position.y += ((selected ? 0.2 : 0) - ref.current.position.y) * dt * 5
   })
   return (
-    <group ref={ref} position={[0, 0, 0]}>
+    <group ref={ref} position={[7, 0, -5]}>
       <group scale={[2.0, 2.0, 2.0]}>
         <QuinceMartiresMonument />
       </group>
@@ -1200,9 +1200,54 @@ function RobredoZone({ selected }: { selected: boolean }) {
   )
 }
 
+// ── Animated waterfall strips ─────────────────────────────────────────────────
+function AnimatedWaterfall({
+  topY=4.8, bottomY=0.2, x=0, z=0.50, width=0.82, strips=6, speed=0.42
+}: {
+  topY?: number; bottomY?: number; x?: number; z?: number
+  width?: number; strips?: number; speed?: number
+}) {
+  const ref = useRef<THREE.Group>(null)
+  const height = topY - bottomY
+  const stripH = (height / strips) * 0.80
+
+  useFrame((state) => {
+    if (!ref.current) return
+    const t = state.clock.elapsedTime * speed
+    ref.current.children.forEach((child, i) => {
+      const frac = ((t + i / strips) % 1)
+      child.position.y = bottomY + (1 - frac) * height
+    })
+  })
+
+  return (
+    <group ref={ref}>
+      {Array.from({ length: strips }, (_, i) => (
+        <mesh key={i} position={[x, topY, z]}>
+          <boxGeometry args={[width, stripH, 0.13]} />
+          <meshLambertMaterial
+            color={i % 2 === 0 ? '#5A9EC8' : '#7ABEDE'}
+            transparent opacity={0.72} depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 // ── Malabsay Falls ─────────────────────────────────────────────────────────────
 function MalabsayFalls({ x=0, y=0, z=0 }: { x?:number; y?:number; z?:number }) {
-  const water = '#4A88B8', spray = '#88BBDD', rock = '#7A7060', moss = '#4A6A40'
+  const rock = '#7A7060', moss = '#4A6A40'
+  const water = '#4A88B8', spray = '#88BBDD'
+  const mistMat = useRef<THREE.MeshLambertMaterial>(null)
+  const poolMat = useRef<THREE.MeshLambertMaterial>(null)
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (mistMat.current) mistMat.current.opacity = 0.16 + Math.sin(t * 2.4) * 0.08
+    if (poolMat.current) poolMat.current.opacity = 0.82 + Math.sin(t * 1.8 + 1.0) * 0.06
+  })
+
   return (
     <group position={[x, y, z]}>
       {/* Cliff face */}
@@ -1211,19 +1256,21 @@ function MalabsayFalls({ x=0, y=0, z=0 }: { x?:number; y?:number; z?:number }) {
       {/* Moss on cliff */}
       <B x={-0.5} y={2.0} z={0.45} w={0.6}  h={2.8}  d={0.12} color={moss} shadow={false} />
       <B x={ 0.6} y={1.6} z={0.45} w={0.4}  h={2.0}  d={0.12} color={moss} shadow={false} />
-      {/* Main waterfall cascade */}
-      <B x={0}    y={2.4} z={0.45} w={0.85} h={4.8}  d={0.16} color={water} shadow={false} />
-      {/* Second tier */}
-      <B x={0.1}  y={0.8} z={0.55} w={0.70} h={1.0}  d={0.14} color={spray} shadow={false} />
-      {/* Spray/mist at base */}
+      {/* Dark backdrop so gaps between strips are filled */}
+      <B x={0}    y={2.4} z={0.44} w={0.85} h={4.8}  d={0.06} color="#2A5A88" shadow={false} />
+      {/* Animated main cascade */}
+      <AnimatedWaterfall topY={4.8} bottomY={0.22} x={0} z={0.50} width={0.82} strips={6} speed={0.44} />
+      {/* Animated second tier */}
+      <AnimatedWaterfall topY={1.28} bottomY={0.22} x={0.1} z={0.58} width={0.66} strips={4} speed={0.52} />
+      {/* Spray/mist at base — opacity pulses */}
       <mesh position={[0, 0.08, 1.0]}>
         <sphereGeometry args={[0.55, 7, 4]} />
-        <meshLambertMaterial color={spray} transparent opacity={0.22} />
+        <meshLambertMaterial ref={mistMat} color={spray} transparent opacity={0.22} />
       </mesh>
-      {/* Pool */}
+      {/* Pool — shimmer */}
       <mesh rotation={[-Math.PI/2,0,0]} position={[0, 0.06, 1.2]}>
         <planeGeometry args={[2.0, 1.4]} />
-        <meshLambertMaterial color={water} transparent opacity={0.88} />
+        <meshLambertMaterial ref={poolMat} color={water} transparent opacity={0.88} />
       </mesh>
       <mesh rotation={[-Math.PI/2,0,0]} position={[0, 0.07, 1.0]}>
         <planeGeometry args={[0.9, 0.6]} />
@@ -1600,12 +1647,398 @@ function IsarogClouds() {
   )
 }
 
+// ── Atmosphere controller (always rendered — smoothly lerps sky + fog) ────────
+function AtmosphereController({ festival }: { festival: boolean }) {
+  const { scene, gl } = useThree()
+  const prog = useRef(0)
+  const day  = useMemo(() => new THREE.Color('#1A2535'), [])
+  const fest = useMemo(() => new THREE.Color('#180C08'), [])
+  const cur  = useMemo(() => new THREE.Color('#1A2535'), [])
+  useFrame(() => {
+    prog.current += ((festival ? 1 : 0) - prog.current) * 0.038
+    cur.lerpColors(day, fest, prog.current)
+    if (scene.background instanceof THREE.Color) scene.background.copy(cur)
+    if (scene.fog) (scene.fog as THREE.Fog).color.copy(cur)
+    gl.setClearColor(cur, 1)
+  })
+  return null
+}
+
+// ── Festival Mode ─────────────────────────────────────────────────────────────
+
+function FestivalPennantString({ from, to, height=2.8 }: {
+  from:[number,number]; to:[number,number]; height?:number
+}) {
+  const dx = to[0]-from[0], dz = to[1]-from[1]
+  const len = Math.sqrt(dx*dx+dz*dz)
+  const mid: [number,number,number] = [(from[0]+to[0])/2, height, (from[1]+to[1])/2]
+  const heading = Math.atan2(dx, dz)
+  const count = Math.max(5, Math.round(len*2.2))
+  const colors = ['#7B3038','#C29A51','#7B3038','#C29A51','#F5F0E5','#C29A51']
+  return (
+    <group>
+      <mesh position={mid} rotation={[0, heading, 0]}>
+        <boxGeometry args={[0.01, 0.01, len]} />
+        <meshLambertMaterial color="#8B7050" />
+      </mesh>
+      {Array.from({length: count}, (_, i) => {
+        const t = i/(count-1)
+        const px = from[0]+t*dx, pz = from[1]+t*dz
+        const sag = Math.sin(t*Math.PI)*0.06
+        return (
+          <mesh key={i} position={[px, height-0.07-sag, pz]} rotation={[0, heading, 0]}>
+            <boxGeometry args={[0.07, 0.15, 0.02]} />
+            <meshLambertMaterial color={colors[i%colors.length]} />
+          </mesh>
+        )
+      })}
+    </group>
+  )
+}
+
+function FestivalBunting() {
+  const ref  = useRef<THREE.Group>(null)
+  const prog = useRef(0)
+  useFrame((_, dt) => {
+    prog.current = Math.min(1, prog.current + dt * 1.0)
+    if (ref.current) {
+      const ease = 1 - Math.pow(1 - prog.current, 3)
+      ref.current.position.y = (1 - ease) * 4.2
+    }
+  })
+  const nsZ = [-8,-6,-4,-2,0,2,4,6,8]
+  const ewX = [-8,-6,-4,-2,2,4,6,8]
+  return (
+    <group ref={ref} position={[0, 4.2, 0]}>
+      {nsZ.map((z,i) => (
+        <FestivalPennantString key={`ns${i}`} from={[-2.8,z]} to={[2.8,z]} height={2.9} />
+      ))}
+      {ewX.map((x,i) => (
+        <FestivalPennantString key={`ew${i}`} from={[x,-2.8]} to={[x,2.8]} height={2.9} />
+      ))}
+      {([-3.5,-1.5,1.5,3.5] as number[]).map((x,i) => (
+        <FestivalPennantString key={`sec${i}`} from={[x, 3.8]} to={[x, 5.8]} height={2.6} />
+      ))}
+    </group>
+  )
+}
+
+function FestivalRoadOverlay() {
+  return (
+    <group>
+      <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.016,0]}>
+        <planeGeometry args={[1.5,34]} />
+        <meshLambertMaterial color="#D4920A" transparent opacity={0.15} depthWrite={false} />
+      </mesh>
+      <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.016,0]}>
+        <planeGeometry args={[34,1.5]} />
+        <meshLambertMaterial color="#D4920A" transparent opacity={0.15} depthWrite={false} />
+      </mesh>
+      <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.016,4.8]}>
+        <planeGeometry args={[20,0.75]} />
+        <meshLambertMaterial color="#D4920A" transparent opacity={0.10} depthWrite={false} />
+      </mesh>
+      <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.016,-4.8]}>
+        <planeGeometry args={[12,0.75]} />
+        <meshLambertMaterial color="#D4920A" transparent opacity={0.10} depthWrite={false} />
+      </mesh>
+      <mesh rotation={[-Math.PI/2,0,0]} position={[-5.2,0.016,0]}>
+        <planeGeometry args={[0.75,12]} />
+        <meshLambertMaterial color="#D4920A" transparent opacity={0.10} depthWrite={false} />
+      </mesh>
+    </group>
+  )
+}
+
+function ProcessionCarriage() {
+  const silver = '#C2C6CA', silverDk = '#6A7078', silverLt = '#DDE0E4'
+  const gold   = '#D4A020', goldLt   = '#F0C040'
+  return (
+    <group>
+      {/* Base platform */}
+      <mesh position={[0, 0.07, 0]} castShadow>
+        <cylinderGeometry args={[0.82, 0.84, 0.10, 14]} />
+        <meshLambertMaterial color={silverDk} />
+      </mesh>
+      <mesh position={[0, 0.13, 0]}>
+        <cylinderGeometry args={[0.84, 0.84, 0.04, 14]} />
+        <meshLambertMaterial color={silverLt} />
+      </mesh>
+      {/* Main dome */}
+      <mesh position={[0, 0.82, 0]} castShadow>
+        <sphereGeometry args={[0.76, 16, 12, 0, Math.PI*2, 0, Math.PI*0.60]} />
+        <meshLambertMaterial color={silver} />
+      </mesh>
+      {/* Dome base seal */}
+      <mesh position={[0, 0.82, 0]}>
+        <cylinderGeometry args={[0.76, 0.76, 0.06, 14]} />
+        <meshLambertMaterial color={silverDk} />
+      </mesh>
+      {/* Dome vertical ribs */}
+      {Array.from({length: 12}, (_, i) => {
+        const a = (i/12)*Math.PI*2
+        return (
+          <mesh key={i} position={[Math.cos(a)*0.70, 0.93, Math.sin(a)*0.70]}
+                rotation={[0, a+Math.PI/2, 0.33]} castShadow>
+            <cylinderGeometry args={[0.013, 0.013, 0.90, 4]} />
+            <meshLambertMaterial color={silverDk} />
+          </mesh>
+        )
+      })}
+      {/* Sheen band */}
+      <mesh position={[0, 0.85, 0]}>
+        <cylinderGeometry args={[0.78, 0.78, 0.05, 14]} />
+        <meshLambertMaterial color={silverLt} />
+      </mesh>
+      {/* Gold accent at dome top */}
+      <mesh position={[0, 1.52, 0]}>
+        <cylinderGeometry args={[0.10, 0.10, 0.04, 10]} />
+        <meshLambertMaterial color={gold} emissive={gold} emissiveIntensity={0.12} />
+      </mesh>
+      {/* White flower wreath */}
+      <mesh position={[0, 1.50, 0]}>
+        <torusGeometry args={[0.22, 0.048, 5, 16]} />
+        <meshLambertMaterial color="#F2EDE6" />
+      </mesh>
+      {Array.from({length: 8}, (_, i) => {
+        const a = (i/8)*Math.PI*2
+        return (
+          <mesh key={i} position={[Math.cos(a)*0.22, 1.51, Math.sin(a)*0.22]}>
+            <sphereGeometry args={[0.052, 5, 4]} />
+            <meshLambertMaterial color="#FAFAF5" />
+          </mesh>
+        )
+      })}
+      {/* Candles around base */}
+      {Array.from({length: 8}, (_, i) => {
+        const a = (i/8)*Math.PI*2
+        return (
+          <group key={i} position={[Math.cos(a)*0.70, 0.16, Math.sin(a)*0.70]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.028, 0.028, 0.18, 5]} />
+              <meshLambertMaterial color="#F5F0E0" />
+            </mesh>
+            <mesh position={[0, 0.12, 0]}>
+              <sphereGeometry args={[0.022, 4, 3]} />
+              <meshLambertMaterial color={goldLt} emissive="#FF6600" emissiveIntensity={0.7} />
+            </mesh>
+          </group>
+        )
+      })}
+      {/* Our Lady statue on dome */}
+      <group position={[0, 1.55, 0]} scale={0.27}>
+        <PenafranciaStat />
+      </group>
+    </group>
+  )
+}
+
+function DevoteeFigure({ x=0, z=0, shirt='#F2F0EC', headband=false, s=1.0 }: {
+  x?:number; z?:number; shirt?:string; headband?:boolean; s?:number
+}) {
+  return (
+    <group position={[x, 0, z]} scale={s}>
+      <mesh position={[0, 0.14, 0]} castShadow>
+        <boxGeometry args={[0.11, 0.20, 0.09]} />
+        <meshLambertMaterial color="#2A2828" />
+      </mesh>
+      <mesh position={[0, 0.30, 0]} castShadow>
+        <boxGeometry args={[0.13, 0.22, 0.10]} />
+        <meshLambertMaterial color={shirt} />
+      </mesh>
+      <mesh position={[0, 0.46, 0]} castShadow>
+        <sphereGeometry args={[0.065, 6, 5]} />
+        <meshLambertMaterial color="#C89060" />
+      </mesh>
+      {headband && (
+        <mesh position={[0, 0.475, 0]}>
+          <torusGeometry args={[0.067, 0.009, 4, 8]} />
+          <meshLambertMaterial color="#F0C040" emissive="#D4A020" emissiveIntensity={0.15} />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
+// Pre-computed scales to avoid Math.random() in render
+const DEVOTEE_SCALES = Array.from({length: 56}, (_, i) => 0.88 + (i*13%18)/100)
+
+// All devotee positions (shared by ShoutBubbles)
+const DEVOTEE_POS: [number,number][] = [
+  ...Array.from({length:10}, (_,i) => { const a=(i/10)*Math.PI*2; return [Math.cos(a)*0.92, Math.sin(a)*0.92] as [number,number] }),
+  ...Array.from({length:18}, (_,i) => { const a=(i/18)*Math.PI*2; return [Math.cos(a)*1.48, Math.sin(a)*1.48] as [number,number] }),
+  ...Array.from({length:28}, (_,i) => { const a=(i/28)*Math.PI*2; return [Math.cos(a)*2.05, Math.sin(a)*2.05] as [number,number] }),
+]
+
+function BubbleSlot({ initIdx, message, phaseOffset }: {
+  initIdx: number; message: string; phaseOffset: number
+}) {
+  const ref   = useRef<THREE.Group>(null)
+  const piRef = useRef(initIdx % DEVOTEE_POS.length)
+  const bw    = message.length > 5 ? 0.70 : 0.34
+
+  useFrame((state) => {
+    const g = ref.current
+    if (!g) return
+    const cycleT = (state.clock.elapsedTime + phaseOffset) % 4.4
+    let s = 0
+    if      (cycleT < 0.20) s = (cycleT / 0.20) ** 2
+    else if (cycleT < 2.0)  s = 1
+    else if (cycleT < 2.20) s = 1 - ((cycleT - 2.0) / 0.20) ** 2
+
+    g.scale.setScalar(s)
+
+    // Jump to a new devotee while hidden
+    if (cycleT > 2.8 && cycleT < 2.85) {
+      piRef.current = (piRef.current + 11) % DEVOTEE_POS.length
+      const [px, pz] = DEVOTEE_POS[piRef.current]
+      g.position.x = px
+      g.position.z = pz
+    }
+  })
+
+  const [ix, iz] = DEVOTEE_POS[piRef.current]
+  return (
+    <Billboard position={[ix, 0.75, iz]}>
+      <group ref={ref} scale={0}>
+        {/* Gold border */}
+        <mesh position={[0, 0, -0.004]}>
+          <planeGeometry args={[bw+0.06, 0.28]} />
+          <meshBasicMaterial color="#C29A51" transparent opacity={0.55} depthWrite={false} />
+        </mesh>
+        {/* White bubble body */}
+        <mesh>
+          <planeGeometry args={[bw, 0.22]} />
+          <meshBasicMaterial color="#FAFAF5" transparent opacity={0.93} depthWrite={false} />
+        </mesh>
+        {/* Tail (pointing down) */}
+        <mesh position={[0.04, -0.14, 0]} rotation={[0, 0, Math.PI/4]}>
+          <planeGeometry args={[0.07, 0.07]} />
+          <meshBasicMaterial color="#FAFAF5" transparent opacity={0.93} depthWrite={false} />
+        </mesh>
+        <Text position={[0, 0, 0.005]} fontSize={0.080} color="#7B3038"
+          anchorX="center" anchorY="middle">
+          {message}
+        </Text>
+      </group>
+    </Billboard>
+  )
+}
+
+function ShoutBubbles() {
+  return (
+    <>
+      <BubbleSlot initIdx={2}  message="Viva La Virgen!" phaseOffset={0.00} />
+      <BubbleSlot initIdx={13} message="Viva!"           phaseOffset={1.10} />
+      <BubbleSlot initIdx={26} message="Viva La Virgen!" phaseOffset={2.20} />
+      <BubbleSlot initIdx={40} message="Viva!"           phaseOffset={3.30} />
+      <BubbleSlot initIdx={7}  message="Viva!"           phaseOffset={0.55} />
+    </>
+  )
+}
+
+function ProcessionGroup() {
+  const groupRef = useRef<THREE.Group>(null)
+  const domeRef  = useRef<THREE.Group>(null)
+  const progRef  = useRef(0)
+
+  useFrame((state, dt) => {
+    // Spring scale-in on mount
+    progRef.current = Math.min(1, progRef.current + dt * 0.85)
+    if (groupRef.current) {
+      const p = progRef.current
+      // ease-in to 1.10 then settle to 1.0 (spring overshoot)
+      const s = p < 0.72
+        ? p / 0.72
+        : p < 0.86
+          ? 1.0 + (p - 0.72) / 0.14 * 0.10
+          : 1.10 - (p - 0.86) / 0.14 * 0.10
+      groupRef.current.scale.setScalar(s)
+    }
+    // Gentle bob on the dome
+    if (domeRef.current)
+      domeRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.65) * 0.012
+  })
+
+  const innerRing = Array.from({length:10}, (_,i) => {
+    const a=(i/10)*Math.PI*2, shirts=['#FFFFFF','#F0F0E8','#FFFFFF']
+    return { x:Math.cos(a)*0.92, z:Math.sin(a)*0.92, shirt:shirts[i%3], hb:i%3===0 }
+  })
+  const midRing = Array.from({length:18}, (_,i) => {
+    const a=(i/18)*Math.PI*2, shirts=['#F2F0EC','#FFFFFF','#E8E8E0','#FFFFFF']
+    return { x:Math.cos(a)*1.48, z:Math.sin(a)*1.48, shirt:shirts[i%4], hb:i%4===1 }
+  })
+  const outerRing = Array.from({length:28}, (_,i) => {
+    const a=(i/28)*Math.PI*2, shirts=['#F8F8F4','#FFFFFF','#F0F0E8']
+    return { x:Math.cos(a)*2.05, z:Math.sin(a)*2.05, shirt:shirts[i%3], hb:i%6===3 }
+  })
+  const all = [...innerRing, ...midRing, ...outerRing]
+
+  return (
+    <group ref={groupRef} scale={0}>
+      <group ref={domeRef}>
+        <ProcessionCarriage />
+      </group>
+      {all.map((d,i) => (
+        <DevoteeFigure key={i} x={d.x} z={d.z} shirt={d.shirt} headband={d.hb}
+          s={DEVOTEE_SCALES[i % DEVOTEE_SCALES.length]} />
+      ))}
+      <ShoutBubbles />
+    </group>
+  )
+}
+
+function FestivalProcession() {
+  const path: [number,number][] = [
+    [  0,  11],
+    [  0,   0],
+    [ 11,   0],
+    [  0,   0],
+    [  0, -11],
+    [  0,   0],
+    [-11,   0],
+    [  0,   0],
+    [  0,  11],
+  ]
+  return (
+    <DriveAlong path={path} speed={0.13} offset={0}>
+      <ProcessionGroup />
+    </DriveAlong>
+  )
+}
+
+function AnimatedFestivalLight({ position, color, maxIntensity, distance, decay }: {
+  position:[number,number,number]; color:string; maxIntensity:number; distance:number; decay:number
+}) {
+  const lightRef = useRef<THREE.PointLight>(null)
+  const prog     = useRef(0)
+  useFrame((_, dt) => {
+    prog.current = Math.min(1, prog.current + dt * 0.55)
+    if (lightRef.current) lightRef.current.intensity = prog.current * maxIntensity
+  })
+  return <pointLight ref={lightRef} position={position} color={color} intensity={0}
+    distance={distance} decay={decay} />
+}
+
+function FestivalMode() {
+  return (
+    <>
+      <AnimatedFestivalLight position={[0,6,0]}   color="#FF9030" maxIntensity={0.55} distance={32} decay={1.5} />
+      <AnimatedFestivalLight position={[7,5,6]}   color="#FFB040" maxIntensity={0.40} distance={18} decay={2.0} />
+      <AnimatedFestivalLight position={[-5,5,-5]} color="#FF8020" maxIntensity={0.35} distance={20} decay={2.0} />
+      <FestivalRoadOverlay />
+      <FestivalBunting />
+      <FestivalProcession />
+    </>
+  )
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 export function CityMap() {
-  const { selectedDestination, setLoading } = useAppStore()
+  const { selectedDestination, setLoading, penafranciaModeActive } = useAppStore()
 
   const zones = [
-    { id:'quincemart' as DestinationId, pos:[0,0,0]    as [number,number,number], name:'Plaza Quince Martires', color:'#7B3038' },
+    { id:'quincemart' as DestinationId, pos:[7,0,-5]   as [number,number,number], name:'Plaza Quince Martires', color:'#7B3038' },
     { id:'basilica'   as DestinationId, pos:[7,0,6]    as [number,number,number], name:'Basilica Minore',       color:'#7B3038' },
     { id:'kinalas'    as DestinationId, pos:[-7,0,6]   as [number,number,number], name:'Kinalas Trail',         color:'#B96848' },
     { id:'robredo'    as DestinationId, pos:[-7,0,-6]  as [number,number,number], name:'Robredo Museum',        color:'#C29A51' },
@@ -1627,6 +2060,7 @@ export function CityMap() {
       <color attach="background" args={['#1A2535']} />
       <fog attach="fog" color="#1A2535" near={90} far={130} />
 
+      <AtmosphereController festival={penafranciaModeActive} />
       <CameraController />
 
       <Suspense fallback={null}>
@@ -1637,7 +2071,7 @@ export function CityMap() {
         <StreetTrees />
         <StreetLamps />
         <SurroundingCity />
-        <Vehicles />
+        {!penafranciaModeActive && <Vehicles />}
         <WalkingPeople />
         <QuinceMartiresZone selected={selectedDestination === 'quincemart'} />
         <BasilicaZone  selected={selectedDestination === 'basilica'} />
@@ -1645,6 +2079,7 @@ export function CityMap() {
         <RobredoZone   selected={selectedDestination === 'robredo'} />
         <IsarogZone    selected={selectedDestination === 'isarog'} />
         <IsarogClouds />
+        {penafranciaModeActive && <FestivalMode />}
         {zones.map(z => (
           <ZoneHitArea key={z.id} destId={z.id} position={z.pos}
             name={z.name} color={z.color}
